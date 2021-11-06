@@ -4,6 +4,7 @@ using Library.WebApi.Swagger;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,33 @@ builder.Services.AddDbContext<LibraryContext>(options =>
 });
 
 builder.Services.AddControllers();
+
+// for identity server 4, alternative to Custom Authorization Filter inn controllers
+//builder.Services.AddAuthentication("Bearer")
+//    .AddJwtBearer("Bearer", options =>
+//    {
+//        options.Authority = "https://localhost:5001";
+//        options.TokenValidationParameters = new TokenValidationParameters
+//        {
+//            ValidateAudience = false
+//        };
+//    });
+
+//builder.Services.AddAuthorization(options =>
+//{
+//    options.AddPolicy("WebApiScope", policy =>
+//    {
+//        policy.RequireAuthenticatedUser();
+//        policy.RequireClaim("scope", "webapi");
+//    });
+
+//    options.AddPolicy("WebApiWriteScope", policy =>
+//    {
+//        policy.RequireAuthenticatedUser();
+//        policy.RequireClaim("scope", "write");
+//    });
+//});
+
 builder.Services.AddApiVersioning(options =>
 {
     options.ReportApiVersions = true;
@@ -41,7 +69,8 @@ builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder => {
+    options.AddDefaultPolicy(builder =>
+    {
         builder.WithOrigins("https://localhost:7231")
             .AllowAnyHeader()
             .AllowAnyMethod();
@@ -54,12 +83,12 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    
+
     using (var scope = app.Services.CreateScope())
     {
         app.UseSwaggerUI(options =>
         {
-            foreach (var description in 
+            foreach (var description in
                 scope.ServiceProvider.GetRequiredService<IApiVersionDescriptionProvider>().ApiVersionDescriptions)
             {
                 options.SwaggerEndpoint(
@@ -79,6 +108,7 @@ app.UseHttpsRedirection();
 
 app.UseCors();
 
+//app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
