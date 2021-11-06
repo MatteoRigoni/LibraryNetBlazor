@@ -1,0 +1,15 @@
+﻿<tr>
+    <td>
+        <NavLink class="my-list-item" href="@($"/books/{Book.BookId}")">
+            @Book.Title
+        </NavLink>
+    </td>
+
+    <td>@Book.Price</td>
+    <td>@(Book.PublishDate.Year > 1900 ? @Book.PublishDate.ToShortDateString() : "")</td>
+</tr>
+
+@code {
+    [Parameter]
+    public Book Book { get; set; }
+}

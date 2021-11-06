@@ -1,0 +1,93 @@
+﻿@page "/books/{bookId:int}"
+@page "/author/{authorId:int}/books/new"
+
+@inject NavigationManager NavigationManager
+@inject IBooksScreenUseCase BooksScreenUseCase
+
+<h3>Book #@BookId detail</h3>
+
+<AlertComponent @ref="alertComponent"></AlertComponent>
+
+@if (book != null)
+{
+    <EditForm Model="book" OnValidSubmit="Update">
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+        <ValidationSummary></ValidationSummary>
+
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <InputText class="form-control" id="title" @bind-Value="book.Title"></InputText>
+        </div>
+        <div class="mb-3">
+            <label for="price" class="form-label">Price</label>
+            <InputNumber class="form-control" id="price" @bind-Value="book.Price"></InputNumber>
+        </div>
+        <div class="mb-3">
+            <label for="date" class="form-label">Publish date</label>
+            <InputDate class="form-control" id="date" @bind-Value="book.PublishDate"></InputDate>
+        </div>
+        <div class="mb-3">
+            <label for="publisher" class="form-label">Publisher</label>
+            <InputText class="form-control" disabled="true" id="publisher" @bind-Value="book.Publisher"></InputText>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Save</button>
+        &nbsp;
+        <button class="btn btn-danger" type="button" @onclick="Remove">Remove</button>
+    </EditForm>
+}
+
+@code {
+    AlertComponent alertComponent;
+
+    [Parameter]
+    public int? BookId { get; set; }
+    [Parameter]
+    public int? AuthorId { get; set; }
+
+    Book book;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (book == null) book = new Book();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (BookId.HasValue)
+            book = await BooksScreenUseCase.ViewBookById(BookId.Value);
+        else
+            book = new Book() { AuthorId = AuthorId.Value };
+    }
+
+    private async Task Update()
+    {
+        bool validationSuccess = true;
+
+        if (!book.ValidatePrice())
+        {
+            alertComponent.ErrorMessage = "Price must be greater than zero";
+            alertComponent.Show();
+            validationSuccess = false;
+        }
+
+        if (validationSuccess)
+        {
+            if (BookId.HasValue)
+                await BooksScreenUseCase.UpdateBook(book);
+            else
+                await BooksScreenUseCase.AddBook(book);
+
+            NavigationManager.NavigateTo($"author/{book.AuthorId}/books");
+        }
+    }
+
+    private async Task Remove()
+    {
+        if (!BookId.HasValue) return;
+
+        await BooksScreenUseCase.RemoveBook(BookId.Value);
+
+        NavigationManager.NavigateTo($"author/{book.AuthorId}/books");
+    }
+}

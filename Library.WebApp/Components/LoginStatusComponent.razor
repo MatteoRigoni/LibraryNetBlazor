@@ -1,0 +1,27 @@
+﻿@inject IAuthenticationUseCase AuthenticationUseCases;
+@inject NavigationManager NavigationManager;
+
+@if (username != null)
+{
+    <text>Welcome @username</text>
+    <button type="button" @onclick="Logout" class="btn btn-dark">Log out</button>
+}
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> authenticationState {get;set;}
+
+    string username;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await authenticationState;
+        username = state.User.Identity.Name;
+    }
+
+    void Logout()
+    {
+        AuthenticationUseCases.Logout();
+        NavigationManager.NavigateTo("/", true);
+    }
+}

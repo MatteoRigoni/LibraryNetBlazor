@@ -1,0 +1,21 @@
+﻿<div class="alert alert-danger" role="alert" style="@($"display: {display}")">
+  @ErrorMessage
+  <button type="button"  @onclick="Dismiss" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+@code {
+    string display = "none";
+
+    public string ErrorMessage { get; set; }
+
+    public void Show()
+    {
+        display = "block";
+        StateHasChanged();
+    }
+    public void Dismiss()
+    {
+        display = "none";
+        ErrorMessage = "";
+    }
+}

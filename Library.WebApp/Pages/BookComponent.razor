@@ -1,0 +1,89 @@
+﻿@page "/author/{authorId:int}/books"
+
+@inject NavigationManager NavigationManager;
+@inject IBooksScreenUseCase BooksScreenUseCase;
+
+@attribute [Authorize]
+
+<h3>Books</h3>
+<br />
+
+<div class="row row-fluid h-100">
+    <div class="col-auto">
+        <input type="text" class="form-control" @bind-value="searchFilter" />
+    </div>
+    <div class="col-auto">
+        <input type="button" class="btn btn-secondary" @onclick="OnSearch" value="Search" />
+    </div>
+    <div class="col-auto my-auto">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="newest" @bind-value="ViewOnlyPenalityKick" />
+            <label class="form-check-label" for="newest">Penality kick</label>
+        </div>
+    </div>
+</div>
+<br />
+
+@if (books != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Publish date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in books)
+            {
+                <BookRowComponent Book=book></BookRowComponent>
+            }
+        </tbody>
+    </table>
+
+    <button class="btn btn-primary" @onclick="Add">Add book</button>
+}
+
+@code {
+    [Parameter]
+    public int AuthorId { get; set; }
+
+    IEnumerable<Book> books;
+
+    string searchFilter;
+
+    bool viewOnlyPenalityKick = false;
+    public bool ViewOnlyPenalityKick
+    {
+        get => viewOnlyPenalityKick;
+        set
+        {
+            viewOnlyPenalityKick = value;
+            Task.Run(async () =>
+            {
+                if (viewOnlyPenalityKick)
+                    books = await BooksScreenUseCase.ViewBooksFilteredAsync(AuthorId, "rigor");
+                else
+                    books = await BooksScreenUseCase.ViewBooksByAuthorAsync(AuthorId);
+
+                StateHasChanged();
+            });
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        books = await BooksScreenUseCase.ViewBooksByAuthorAsync(AuthorId);
+    }
+
+    private async Task OnSearch()
+    {
+        books = await BooksScreenUseCase.ViewBooksFilteredAsync(AuthorId, searchFilter);
+    }
+
+    private async Task Add()
+    {
+        NavigationManager.NavigateTo($"/author/{AuthorId}/books/new");
+    }
+}

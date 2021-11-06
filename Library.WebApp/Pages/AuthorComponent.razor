@@ -1,0 +1,35 @@
+﻿@page "/"
+
+@inject IAuthenticationUseCase AuthenticationUseCase;
+@inject IAuthorsScreenUseCase AuthorsScreenUseCase;
+
+<h3>Authors</h3>
+
+@if (authors != null)
+{
+    <ul class="list-group">
+        @foreach (var author in authors)
+        {
+            <NavLink class="my-list-item" href="@($"/author/{author.AuthorId}/books")">
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">@author.Name</div>
+                        Id: @author.AuthorId
+                    </div>
+                    <span class="badge bg-primary rounded-pill">@author.Books.Count</span>
+                </li>
+            </NavLink>
+        }
+    </ul>
+}
+
+@code {
+    IEnumerable<Author> authors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await AuthenticationUseCase.Login("user1", "password1");
+
+        authors = await AuthorsScreenUseCase.ViewAuthorsAsync();
+    }
+}
